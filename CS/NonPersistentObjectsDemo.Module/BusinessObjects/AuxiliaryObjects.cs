@@ -72,6 +72,24 @@ namespace NonPersistentObjectsDemo.Module.BusinessObjects {
             get { return publicName; }
             set { SetPropertyValue(nameof(PublicName), ref publicName, value); }
         }
+
+        private BindingList<Message> _messagesSent;
+        public BindingList<Message> MessagesSent {
+            get {
+                if(_messagesSent == null) {
+                    _messagesSent = new BindingList<Message>();
+                    CriteriaOperator criteria = new BinaryOperator(
+                        new OperandProperty("Sender.UserName"), new OperandValue(UserName),
+                        BinaryOperatorType.Equal
+                    );
+                    var mgs = ObjectSpace.GetObjects<Message>(criteria);
+                    foreach(var m in mgs) {
+                        _messagesSent.Add(m);
+                    }
+                }
+                return _messagesSent;
+            }
+        }
     }
 
 

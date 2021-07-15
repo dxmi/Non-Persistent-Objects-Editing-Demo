@@ -42,6 +42,16 @@ namespace NonPersistentObjectsDemo.Module.BusinessObjects {
             mMessage.Table.AddColumn(new DBColumn("Sender", false, null, 255, DBColumnType.String));
             mMessage.Table.AddColumn(new DBColumn("Recepient", false, null, 255, DBColumnType.String));
             mMessage.Table.PrimaryKey = new DBPrimaryKey(new object[] { mMessageKey });
+            var fkSender = new DBForeignKey();
+            fkSender.Columns.Add("Sender");
+            fkSender.PrimaryKeyTable = "Accounts";
+            fkSender.PrimaryKeyTableKeyColumns.Add("UserName");
+            mMessage.Table.AddForeignKey(fkSender);
+            var fkRecepient = new DBForeignKey();
+            fkRecepient.Columns.Add("Recepient");
+            fkRecepient.PrimaryKeyTable = "Accounts";
+            fkRecepient.PrimaryKeyTableKeyColumns.Add("UserName");
+            mMessage.Table.AddForeignKey(fkRecepient);
             mMessage.Create = () => new Message();
             mMessage.SetKey = (obj, key) => {
                 ((Message)obj).SetKey((int)key);

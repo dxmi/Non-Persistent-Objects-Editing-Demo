@@ -230,13 +230,21 @@ namespace NonPersistentObjectsDemo.Module {
             this.alias = alias;
         }
         protected override CriteriaOperator Visit(OperandProperty theOperand) {
-            var column = table.GetColumn(theOperand.PropertyName);
-            if(column != null) {
-                return new QueryOperand(table.GetColumn(theOperand.PropertyName), alias);
+            if(string.IsNullOrEmpty(theOperand.PropertyName))
+                throw new ArgumentException("PropertyName is empty");
+            var parts = theOperand.PropertyName.Split('.');
+            var column = table.GetColumn(parts[0]);
+            if(column == null) {
+                throw new ArgumentException($"Property '{theOperand.PropertyName}' is not mapped to any column");
             }
-            else {
-                return null;
+            if(parts.Length > 1) {
+                var fk = table.ForeignKeys.FirstOrDefault(f => f.Columns.Count == 1 && f.Columns.Contains(column.Name));
+                if(fk != null && fk.PrimaryKeyTableKeyColumns.Count == 1 && fk.PrimaryKeyTableKeyColumns.Contains(parts[1])) {
+                    return new QueryOperand(column, alias);
+                }
+                throw new NotSupportedException("Nested property paths are not supported");
             }
+            return new QueryOperand(column, alias);
         }
         public static CriteriaOperator Transform(CriteriaOperator criteria, DBTable table, string alias) {
             return new SimpleDataStoreCriteriaVisitor(table, alias).Process(criteria);
