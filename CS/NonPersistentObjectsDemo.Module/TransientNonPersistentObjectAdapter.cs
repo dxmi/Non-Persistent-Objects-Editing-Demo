@@ -73,7 +73,8 @@ namespace NonPersistentObjectsDemo.Module {
         }
         private void ObjectSpace_ObjectGetting(object sender, ObjectGettingEventArgs e) {
             if(e.SourceObject != null && objectMap.IsKnown(e.SourceObject.GetType())) {
-                if(objectMap.Contains(e.SourceObject) || IsNewObject(e.SourceObject)) {
+                var link = (IObjectSpaceLink)e.SourceObject;
+                if(objectSpace.Equals(link.ObjectSpace) && (objectMap.Contains(e.SourceObject) || IsNewObject(e.SourceObject))) {
                     e.TargetObject = e.SourceObject;
                 }
                 else {
@@ -85,7 +86,7 @@ namespace NonPersistentObjectsDemo.Module {
         private void ObjectSpace_ObjectsGetting(object sender, ObjectsGettingEventArgs e) {
             if(objectMap.IsKnown(e.ObjectType)) {
                 var collection = new DynamicCollection(objectSpace, e.ObjectType, e.Criteria, e.Sorting, e.InTransaction);
-                collection.ObjectsGetting += DynamicCollection_ObjectsGetting;
+                collection.FetchObjects += DynamicCollection_FetchObjects;
                 e.Objects = collection;
             }
         }
@@ -96,15 +97,17 @@ namespace NonPersistentObjectsDemo.Module {
         private IEnumerable GetList(Type objectType, CriteriaOperator criteria, IList<DevExpress.Xpo.SortProperty> sorting) {
             return factory.GetObjects(objectType, criteria, sorting);
         }
-        private void DynamicCollection_ObjectsGetting(object sender, DynamicObjectsGettingEventArgs e) {
+        private void DynamicCollection_FetchObjects(object sender, FetchObjectsEventArgs e) {
             e.Objects = GetList(e.ObjectType, e.Criteria, e.Sorting);
-            e.ShapeRawData = true;
+            e.ShapeData = true;
         }
     }
 
     public class ObjectMap {
         private Dictionary<Type, Dictionary<Object, Object>> typeMap;
-        public ObjectMap(params Type[] types) {
+        private NonPersistentObjectSpace objectSpace;
+        public ObjectMap(NonPersistentObjectSpace objectSpace, params Type[] types) {
+            this.objectSpace = objectSpace;
             this.typeMap = new Dictionary<Type, Dictionary<object, object>>();
             foreach(var type in types) {
                 typeMap.Add(type, new Dictionary<object, object>());
@@ -143,6 +146,9 @@ namespace NonPersistentObjectsDemo.Module {
             if(typeMap.TryGetValue(type, out objectMap)) {
                 objectMap.Add(key, obj);
             }
+        }
+        public void Accept(Object obj) {
+            objectSpace.GetObject(obj);
         }
     }
 }

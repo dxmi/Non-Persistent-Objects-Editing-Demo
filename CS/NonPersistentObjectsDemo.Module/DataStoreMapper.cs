@@ -91,12 +91,13 @@ namespace NonPersistentObjectsDemo.Module {
         private void PhaseThree(DataStoreMapping mapping, List<object> objects, SelectStatementResult result) {
             for(int i = 0; i < objects.Count; i++) {
                 mapping.Load(objects[i], result.Rows[i].Values, objectMap);
+                objectMap.Accept(objects[i]);
             }
         }
         public IList<object> LoadObjects(Type objectType, CriteriaOperator criteria) {
             var mapping = mappings[objectType];
             var alias = "T";
-            var dbCriteria = SimpleDataStoreCriteriaVisitor.Process(criteria, mapping.Table, alias);
+            var dbCriteria = SimpleDataStoreCriteriaVisitor.Transform(criteria, mapping.Table, alias);
             return LoadObjectsCore(objectType, dbCriteria, alias);
         }
         private IList<object> LoadObjectsCore(Type objectType0, CriteriaOperator dbCriteria, string alias) {
@@ -237,7 +238,7 @@ namespace NonPersistentObjectsDemo.Module {
                 return null;
             }
         }
-        public static CriteriaOperator Process(CriteriaOperator criteria, DBTable table, string alias) {
+        public static CriteriaOperator Transform(CriteriaOperator criteria, DBTable table, string alias) {
             return new SimpleDataStoreCriteriaVisitor(table, alias).Process(criteria);
         }
     }

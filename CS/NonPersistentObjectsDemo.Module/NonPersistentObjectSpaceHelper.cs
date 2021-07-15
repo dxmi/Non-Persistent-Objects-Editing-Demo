@@ -19,7 +19,7 @@ namespace NonPersistentObjectsDemo.Module {
             this.AdapterCreators = new List<Action<NonPersistentObjectSpace>>();
             application.ObjectSpaceCreated += Application_ObjectSpaceCreated;
             NonPersistentObjectSpace.UseKeyComparisonToDetermineIdentity = true;
-            NonPersistentObjectSpace.NeedSetModifiedOnObjectChangedDefault = true;
+            NonPersistentObjectSpace.AutoSetModifiedOnObjectChangeByDefault = true;
         }
         public void Dispose() {
             application.ObjectSpaceCreated -= Application_ObjectSpaceCreated;
@@ -29,13 +29,20 @@ namespace NonPersistentObjectsDemo.Module {
                 NonPersistentObjectSpace npos = (NonPersistentObjectSpace)e.ObjectSpace;
                 if(basePersistentTypes != null) {
                     foreach(var type in basePersistentTypes) {
-                        IObjectSpace persistentObjectSpace = application.CreateObjectSpace(type);
-                        npos.AdditionalObjectSpaces.Add(persistentObjectSpace);
+                        EnsureObjectSpaceForType(npos, type);
                     }
                 }
-                npos.NeedDisposeAdditionalObjectSpaces = true;
+                npos.AutoDisposeAdditionalObjectSpaces = true;
                 foreach(var adapterCreator in AdapterCreators) {
                     adapterCreator.Invoke(npos);
+                }
+            }
+        }
+        private void EnsureObjectSpaceForType(NonPersistentObjectSpace npos, Type type) {
+            if(!npos.IsKnownType(type)) {
+                if(!npos.AdditionalObjectSpaces.Any(os => os.IsKnownType(type))) {
+                    IObjectSpace persistentObjectSpace = application.CreateObjectSpace(type);
+                    npos.AdditionalObjectSpaces.Add(persistentObjectSpace);
                 }
             }
         }

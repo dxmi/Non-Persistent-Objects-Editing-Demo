@@ -12,7 +12,8 @@
 
 ## Scenario
 
-This example demonstrates a possible implementation of editable non-persistent objects that represent data stored remotely and separate from the main XAF application database. These non-persistent objects can be created, deleted, and modified. Their changes are persisted in the external storage. The **FilterController** is enabled for these objects, so their list and lookup list views can be filtered. The built-in **IsNewObject** function is used in a criterion of an appearance rule that disabled the key property editor after the Account object is saved.
+This example demonstrates a possible implementation of editable non-persistent objects that represent data stored remotely and separately from the main XAF application database. These non-persistent objects can be created, deleted, and modified. Their changes are persisted in the external storage. The **FilterController** is enabled for these objects, so their list view and lookup list view can be filtered. The built-in **IsNewObject** function is used in the Appearance rule criterion. This rule disables the key property editor after an Account object is saved.
+
 
 ## Solution
 
@@ -22,26 +23,26 @@ Non-persistent objects are kept in an object map. In the [ObjectsGetting](https:
 
 In the [CustomCommitChanges](https://docs.devexpress.com/eXpressAppFramework/DevExpress.ExpressApp.BaseObjectSpace.CustomCommitChanges?v=20.1) event handler, all object changes are processed and passed to the storage in a single atomic operation.
 
-The [NonPersistentObjectSpace\.NeedSetModifiedOnObjectChanged](https://docs.devexpress.com/eXpressAppFramework/DevExpress.ExpressApp.NonPersistentObjectSpace.NeedSetModifiedOnObjectChanged?v=20.1) property is set to *true* to automatically mark non-persistent objects as modified when they are changed and raise the INotifyPropertyChanged.PropertyChanged notification.
+The [NonPersistentObjectSpace\.AutoSetModifiedOnObjectChange](https://docs.devexpress.com/eXpressAppFramework/DevExpress.ExpressApp.NonPersistentObjectSpace.AutoSetModifiedOnObjectChange?v=20.1) property is set to *true* to automatically mark non-persistent objects as modified when the *INotifyPropertyChanged.PropertyChanged* event is raised.
 
-We use a simplified [IDataStore](https://docs.devexpress.com/CoreLibraries/DevExpress.Xpo.DB.IDataStore) implementation as a storage for Non-Persistent Object data.
+We use a simplified implementation of [IDataStore](https://docs.devexpress.com/CoreLibraries/DevExpress.Xpo.DB.IDataStore) as storage for Non-Persistent Object data.
 
 
 ### Common Components
 
-The following classes are used to provide common functionality for all non-persistent objects used in the demo.
+The following classes are used to provide a common functionality for all non-persistent objects used in the demo.
 
 #### NonPersistentObjectBase
 
-The abstract base class for all non-persistent objects used in the application. It provides a common implementation of the INotifyPropertyChanged and IObjectSpaceLink interfaces and some useful protected methods.
+The abstract base class for all non-persistent objects used in the application. It provides a common implementation of the INotifyPropertyChanged and IObjectSpaceLink interfaces and some convenient protected methods.
 
 #### NonPersistentObjectSpaceHelper
 
-This is a heper class that subscribes to the XafApplication.ObjectSpaceCreated event, and performs a common setup of NPOS. This usually includes creating and linking additional object spaces, and setting up object adapters. Adapters are registered on the Application.SetupComplete event in the module code.
+This is a helper class that subscribes to the XafApplication.ObjectSpaceCreated event and performs a common setup of NonPersistentObjectSpace. This usually includes creating and linking additional object spaces, and setting up object adapters. Adapters are registered in the Application.SetupComplete event handler in module code.
 
 #### TransientNonPersistentObjectAdapter
 
-The adapter for transient (short-living) NP business objects. A new adapter instance is created for each non-persistent object space. It subscribes to object space events to manage a subset of object types in a common manner. It uses a factory to handle specific object types and their storage. It also maintains an identity map (ObjectMap) for NonPersistentObjectSpace.
+The adapter for transient (short-living) Non-Persistent business objects. Such objects exist only while their object space is alive. A new adapter instance is created for each non-persistent object space. It subscribes to object space events to manage a subset of object types in a common manner. It uses a factory to handle specific object types and their storage. It also maintains an identity map (ObjectMap) for NonPersistentObjectSpace.
 
 #### NonPersistentObjectFactoryBase
 
@@ -49,8 +50,8 @@ Descendants of this class know how to create object instances and transfer data 
 
 #### DataStoreMapper
 
-This is a set of classes that represent an external storage. These classes can be used by a factory to store object data in XPO's IDataStore storages. The classes are:
+This is a set of classes that represents external storage. These classes can be used by a factory to store object data in XPO's IDataStore storage. The classes are:
 - DataStoreObjectLoader - loads objects by their keys and collections of objects.
-- DataStoreObjectSaver - saves modified objects' data.
+- DataStoreObjectSaver - saves data of modified objects.
 - DataStoreMapping - describes how objects are mapped to tables and columns.
 
